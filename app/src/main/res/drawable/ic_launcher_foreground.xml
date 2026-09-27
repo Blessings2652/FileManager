@@ -1,0 +1,28 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="0.8"
+        android:scaleY="0.8">
+        <!-- Folder Shadow/Outer -->
+        <path
+            android:fillColor="#1A000000"
+            android:pathData="M26,32C26,29.79 27.79,28 30,28H46L54,36H82C84.21,36 86,37.79 86,40V76C86,78.21 84.21,80 82,80H30C27.79,80 26,78.21 26,76V32Z" />
+
+        <!-- Folder Main Body -->
+        <path
+            android:fillColor="#FFCA28"
+            android:pathData="M24,30C24,27.79 25.79,26 28,26H44L52,34H80C82.21,34 84,35.79 84,38V74C84,76.21 82.21,78 80,78H28C25.79,78 24,76.21 24,74V30Z" />
+
+        <!-- Folder Front Flap -->
+        <path
+            android:fillColor="#FFD54F"
+            android:pathData="M24,42V74C24,76.21 25.79,78 28,78H80C82.21,78 84,76.21 84,74V42H24Z" />
+    </group>
+
+</vector>

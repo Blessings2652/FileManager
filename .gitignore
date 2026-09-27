@@ -1,0 +1,28 @@
+# Gradle
+.gradle/
+build/
+*/build/
+
+# Android Studio & IDE
+.idea/
+*.iml
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
+local.properties
+
+# Build outputs & Release APKs
+*.apk
+*.aab
+*.dex
+/app/release/
+/release/
+
+# Kotlin / KSP
+.kotlin/
+
+# OS / Miscellaneous
+.DS_Store
+Thumbs.db
+.artifacts/
