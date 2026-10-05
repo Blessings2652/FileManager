@@ -1,4 +1,4 @@
-# File Manager (Shizuku / Root / SAF)
+# File Manager (Shizuku/SAF)
 
 Kotlin/Compose Android file manager with a choice of three access engines,
 picked on first launch and switchable anytime from the browser's overflow menu.
@@ -9,10 +9,10 @@ picked on first launch and switchable anytime from the browser's overflow menu.
   service (`ShizukuFileEngine`, using `ShizukuManager`, which calls
   `Shizuku`'s hidden `newProcess` via reflection since it's no longer public
   API on recent versions).
-- **Root** — commands run as root via `su -c "<command>"`
+- Root — commands run as root via `su -c "<command>"`
   (`RootFileEngine` / `RootManager`). Full filesystem access, requires a
   rooted device (Magisk, etc.); triggers the root manager's grant prompt.
-- **SAF** — no root or Shizuku needed. User picks one folder via
+-SAF— no root or Shizuku needed. User picks one folder via
   `OpenDocumentTree`, and everything happens through `DocumentFile`
   (`SafFileEngine`). Most restricted — can't browse outside the granted
   folder — but always available.
@@ -52,7 +52,7 @@ picked on first launch and switchable anytime from the browser's overflow menu.
      choosing this, then grant the permission prompt.
    - **Root**: device needs to already be rooted (Magisk etc.) — the app
      will trigger the grant prompt itself.
-   - **SAF**: no prerequisite — just pick a folder when prompted.
+   - SAF: no prerequisite — just pick a folder when prompted.
 3. Switch engines anytime via the ⋮ menu in the browser's top bar →
    "Switch access method…".
 
