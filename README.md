@@ -1,66 +1,70 @@
-# File Manager (Shizuku/standard/SAF)
+# File Manager
 
-Kotlin/Compose Android file manager with a choice of three access engines,
-picked on first launch and switchable anytime from the browser's overflow menu.
+A Kotlin / Jetpack Compose file manager for Android with three interchangeable
+access engines: **Shizuku**, **root**, and the **Storage Access Framework (SAF)**.
+You pick an engine on first launch and can switch at any time from the browser's
+overflow menu.
 
-## Engines
+## Screenshots
 
-- **Shizuku** — commands run as the `shell` (UID 2000) user via the Shizuku
-  service (`ShizukuFileEngine`, using `ShizukuManager`, which calls
-  `Shizuku`'s hidden `newProcess` via reflection since it's no longer public
-  API on recent versions).
--SAF— no root or Shizuku needed. User picks one folder via
-  `OpenDocumentTree`, and everything happens through `DocumentFile`
-  (`SafFileEngine`). Most restricted — can't browse outside the granted
-  folder — but always available.
+| File browser | Access engine settings |
+|---|---|
+| ![File browser](screenshots/file-browser.jpg) | ![Access engine settings](screenshots/engine-settings.jpg) |
+
+## Access engines
+
+| Engine  | Requires                                   | Scope                                              |
+|---------|--------------------------------------------|----------------------------------------------------|
+| Shizuku | Shizuku running (ADB or root pairing)      | Full filesystem, as the `shell` user (UID 2000)    |
+| Root    | A rooted device (Magisk or similar)        | Full filesystem, via `su`                          |
+| SAF     | Nothing                                    | Only the single folder you grant access to         |
+
+**Shizuku** runs commands through the Shizuku service (`ShizukuFileEngine`, using
+`ShizukuManager`). Recent Shizuku versions no longer expose `newProcess` as public
+API, so `ShizukuManager` calls it via reflection.
+
+**SAF** needs no root or Shizuku. You choose one folder with `OpenDocumentTree`,
+and all operations go through `DocumentFile`. It cannot browse outside the granted
+folder, but it is always available.
 
 ## Architecture
 
-- `fs/engine/FileEngine.kt` — shared interface (`list`, `mkdir`, `createFile`,
-  `delete`, `rename`, `copy`, `move`, `parentPath`) all three engines
-  implement. Paths are opaque per engine: raw filesystem paths for
-  Shizuku/Root, document Uri strings for SAF.
-- `fs/engine/ShizukuFileEngine.kt` / `RootFileEngine.kt` — thin wrappers
-  around shell commands (`ls -la --full-time`, `mkdir`, `rm -rf`, `mv`,
-  `cp -r`), parsed by the shared `LsParser`.
-- `fs/engine/SafFileEngine.kt` — caches `DocumentFile` objects by Uri string
-  so navigation and rename/delete/move can look nodes back up (SAF doesn't
-  support path string math the way real filesystem paths do). Move tries
-  `DocumentsContract.moveDocument` first, falls back to copy+delete.
-- `fs/engine/EnginePrefs.kt` — SharedPreferences: remembers the chosen
-  engine and (for SAF) the granted tree Uri, so you're not re-picking on
-  every launch.
-- `ui/EngineSelectionScreen.kt` — first-run choice between the three.
-- `ui/ShizukuGateScreen.kt` / `RootGateScreen.kt` / `SafPickerScreen.kt` —
-  per-engine "not ready yet" screens (waiting on Shizuku permission,
-  waiting on root grant, or prompting to pick a SAF folder).
-- `ui/FileBrowserViewModel.kt` — engine-agnostic; takes a `FileEngine` via
-  `FileBrowserViewModel.Factory` and drives all state off the interface.
-- `MainActivity.kt` (`AppRoot`) — reads the saved engine choice, shows the
-  right gate screen until that engine is ready, then hands a live
-  `FileEngine` instance to `FileBrowserScreen`.
+| File | Role |
+|------|------|
+| `fs/engine/FileEngine.kt` | Shared interface (`list`, `mkdir`, `createFile`, `delete`, `rename`, `copy`, `move`, `parentPath`) implemented by all engines. Paths are opaque per engine: raw filesystem paths for Shizuku/Root, document Uri strings for SAF. |
+| `fs/engine/ShizukuFileEngine.kt`, `RootFileEngine.kt` | Thin wrappers around shell commands (`ls -la --full-time`, `mkdir`, `rm -rf`, `mv`, `cp -r`), parsed by the shared `LsParser`. |
+| `fs/engine/SafFileEngine.kt` | Caches `DocumentFile` objects by Uri string so navigation and rename/delete/move can look nodes up again, since SAF does not support path string math. Move tries `DocumentsContract.moveDocument` first and falls back to copy + delete. |
+| `fs/engine/EnginePrefs.kt` | SharedPreferences storing the chosen engine and, for SAF, the granted tree Uri, so you don't re-pick on every launch. |
+| `ui/EngineSelectionScreen.kt` | First-run choice between the three engines. |
+| `ui/ShizukuGateScreen.kt`, `RootGateScreen.kt`, `SafPickerScreen.kt` | Per-engine "not ready yet" screens: waiting for Shizuku permission, waiting for root grant, or prompting for a SAF folder. |
+| `ui/FileBrowserViewModel.kt` | Engine-agnostic. Takes a `FileEngine` through `FileBrowserViewModel.Factory` and drives all state from the interface. |
+| `MainActivity.kt` (`AppRoot`) | Reads the saved engine choice, shows the right gate screen until that engine is ready, then passes a live `FileEngine` to `FileBrowserScreen`. |
+
+## Requirements
+
+- Android Studio Koala or newer
+- An Android device running one of: Shizuku, root, or nothing extra (SAF)
 
 ## Setup
 
-1. Open in Android Studio (Koala+), let Gradle sync.
-2. Run the app. On first launch you'll be asked to choose Shizuku, Root, or
-   SAF.
-   - **Shizuku**: have Shizuku running (ADB or root pairing) before
-     choosing this, then grant the permission prompt.
-   - **Root**: device needs to already be rooted (Magisk etc.) — the app
-     will trigger the grant prompt itself.
-   - SAF: no prerequisite — just pick a folder when prompted.
-3. Switch engines anytime via the ⋮ menu in the browser's top bar →
-   "Switch access method…".
+1. Open the project in Android Studio (Koala+) and let Gradle sync.
+2. Run the app. On first launch you'll be asked to choose Shizuku, Root, or SAF.
+   - **Shizuku:** start Shizuku (ADB or root pairing) before choosing this option,
+     then grant the permission prompt.
+   - **Root:** the device must already be rooted. The app triggers the grant prompt
+     itself.
+   - **SAF:** no prerequisites. Pick a folder when prompted.
+3. To switch engines later, open the ⋮ menu in the browser's top bar and tap
+   **Switch access method…**.
 
-## Known limits
+## Known limitations
 
-- No file preview/open-with — tapping a file just selects it
-  (`state.selected` in the ViewModel, unused by the UI so far).
-- No search, no multi-select batch actions, no chmod/permissions editor.
-- SAF copy/move of large directory trees is synchronous per-file (no
-  progress UI) — fine for casual use, would want a progress indicator for
-  big folders.
-- Root engine spawns one `su -c` process per command rather than keeping a
-  persistent root shell open — simpler and more robust across root
-  managers, but slightly slower for many rapid operations.
+1. No file preview or "open with". Tapping a file only selects it
+   (`state.selected` in the ViewModel, not yet used by the UI).
+2. No search, no multi-select batch actions, and no chmod/permissions editor.
+3. SAF copy and move of large directory trees run synchronously per file with no
+   progress UI. This is fine for casual use but needs a progress indicator for big
+   folders.
+4. The root engine spawns one `su -c` process per command instead of keeping a
+   persistent root shell. This is simpler and more robust across root managers but
+   slower for many rapid operations.
